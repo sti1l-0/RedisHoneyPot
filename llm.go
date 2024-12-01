@@ -71,7 +71,7 @@ func extractMessageContent(response string) (string, error) {
 }
 
 // func main() {
-//     apiKey := "824a5fb0b84df07e712115e4e74291be.ygj8BJuzzRuHGGAJ"
+//     apiKey := ""
 //     content := "ping"
 
 //     response, err := sendRequestAndGetResponse(apiKey, content)
