@@ -41,7 +41,6 @@ func NewRedisServer(address string, proto string, loopsnum int) (server *RedisSe
 		gev.NumLoops(loopsnum))
 	if err != nil {
 		return nil, err
-		panic(err)
 	}
 	return Serv, nil
 }
@@ -78,19 +77,38 @@ func (s *RedisServer) OnMessage(c *connection.Connection, ctx interface{}, data 
 		"addr":   c.PeerAddr(),
 	}).Println()
 
-	apiKey := ""
-	response,err := sendRequestAndGetResponse(apiKey, com)
-    if err!= nil {
-        fmt.Println("请求出错:", err)
-        return
-    }
-	extract_content, err := extractMessageContent(response) 
-	if err != nil {
-		fmt.Println("json解析出错", err)
-		return 
+	switch com {
+	case "ping":
+		out = []byte("+PONG\r\n")
+	case "flushall":
+		out = []byte("+OK\r\n")
+	case "flushdb":
+		out = []byte("+OK\r\n")
+	case "save":
+		out = []byte("+OK\r\n")
+	case "select":
+		out = []byte("+OK\r\n")
+	default:
+		apiKey := ""
+		response, err := sendRequestAndGetResponse(apiKey, com)
+		if err!= nil {
+			fmt.Println("请求出错:", err)
+			return
+		}
+		extract_content, err := extractMessageContent(response)
+		if err != nil {
+			fmt.Println("json解析出错", err)
+			return
+		}
+
+		s.log.WithFields(logrus.Fields{
+			"llm response": extract_content,
+			"addr":   c.PeerAddr(),
+		}).Println()
+
+		out = []byte("+"+extract_content+"\r\n")
 	}
-	out = []byte(extract_content)
-	return	out
+	return
 }
 
 func (s *RedisServer) OnClose(c *connection.Connection) {

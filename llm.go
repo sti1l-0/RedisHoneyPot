@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 )
@@ -70,20 +71,20 @@ func extractMessageContent(response string) (string, error) {
     return "",nil
 }
 
-// func main() {
-//     apiKey := ""
-//     content := "ping"
+func demo() {
+    apiKey := ""
+    content := "ping"
 
-//     response, err := sendRequestAndGetResponse(apiKey, content)
-//     if err!= nil {
-//         fmt.Println("请求出错:", err)
-//         return
-//     }
-// 	extract_content, err := extractMessageContent(response) 
-// 	if err != nil {
-// 		fmt.Println("json解析出错", err)
-// 		return 
-// 	}
+    response, err := sendRequestAndGetResponse(apiKey, content)
+    if err!= nil {
+        fmt.Println("请求出错:", err)
+        return
+    }
+    extract_content, err := extractMessageContent(response) 
+    if err != nil {
+        fmt.Println("json解析出错", err)
+        return 
+    }
 
-//     fmt.Println(extract_content)
-// }
+    fmt.Println(extract_content)
+}
