@@ -78,7 +78,7 @@ func (s *RedisServer) OnMessage(c *connection.Connection, ctx interface{}, data 
 		"addr":   c.PeerAddr(),
 	}).Println()
 
-	apiKey := "824a5fb0b84df07e712115e4e74291be.ygj8BJuzzRuHGGAJ"
+	apiKey := ""
 	response,err := sendRequestAndGetResponse(apiKey, com)
     if err!= nil {
         fmt.Println("请求出错:", err)
