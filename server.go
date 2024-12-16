@@ -16,11 +16,17 @@ import (
 	"gopkg.in/ini.v1"
 )
 
+type SessionMessage struct {
+    Role    string `json:"role"`
+    Content string `json:"content"`
+}
+
 type RedisServer struct {
-	server  *gev.Server
-	hashmap *hashmap.Map
-	Config  *ini.File
-	log     *logrus.Logger
+    server  *gev.Server
+    hashmap *hashmap.Map
+    Config  *ini.File
+    log     *logrus.Logger
+    SessionList []SessionMessage
 }
 
 func NewRedisServer(address string, proto string, loopsnum int) (server *RedisServer, err error) {
@@ -42,6 +48,9 @@ func NewRedisServer(address string, proto string, loopsnum int) (server *RedisSe
 	if err != nil {
 		return nil, err
 	}
+
+	// init llm info
+	updateSessionList(Serv,"请你扮演一个 redis 服务器，我将会以 redis 客户端的身份，通过命令行的形式与你沟通，你需要模仿真实 redis 服务器能够给出的响应向我回复。请注意，我只需要你给出命令响应，不需要任何其他的解释或分析。","system")
 	return Serv, nil
 }
 
@@ -71,9 +80,10 @@ func (s *RedisServer) OnMessage(c *connection.Connection, ctx interface{}, data 
 	}
 
 	com := strings.ToLower(cmd.Name())
+	action := strings.Join(cmd.Args, " ")
 
 	s.log.WithFields(logrus.Fields{
-		"action": strings.Join(cmd.Args, " "),
+		"action": action,
 		"addr":   c.PeerAddr(),
 	}).Println()
 
@@ -90,7 +100,8 @@ func (s *RedisServer) OnMessage(c *connection.Connection, ctx interface{}, data 
 		out = []byte("+OK\r\n")
 	default:
 		apiKey := ""
-		response, err := sendRequestAndGetResponse(apiKey, com)
+		updateSessionList(s, action, "user")
+		response, err := sendRequestAndGetResponse(apiKey,s)
 		if err!= nil {
 			fmt.Println("请求出错:", err)
 			return
@@ -107,8 +118,17 @@ func (s *RedisServer) OnMessage(c *connection.Connection, ctx interface{}, data 
 		}).Println()
 
 		out = []byte("+"+extract_content+"\r\n")
+		updateSessionList(s, extract_content, "assistant")
 	}
 	return
+}
+
+func updateSessionList(rs *RedisServer, message string,role string) {
+    sessionMessage := SessionMessage{
+            Role:    role,
+            Content: message,
+        }
+        rs.SessionList = append(rs.SessionList, sessionMessage)
 }
 
 func (s *RedisServer) OnClose(c *connection.Connection) {

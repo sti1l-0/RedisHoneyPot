@@ -8,21 +8,13 @@ import (
 	"net/http"
 )
 
-func sendRequestAndGetResponse(apiKey, content string) (string, error) {
+func sendRequestAndGetResponse(apiKey string, redisServer *RedisServer) (string, error) {
     // 构建请求数据
     data := map[string]interface{}{
         "model": "glm-4-flash",
-        "messages": []map[string]string{
-            {
-                "role": "system",
-                "content": "请你扮演一个 redis 服务器，我将会以 redis 客户端的身份，通过命令行的形式与你沟通，你需要模仿真实 redis 服务器能够给出的响应向我回复。请注意，我只需要你给出命令响应，不需要任何其他的解释或分析。",
-            },
-            {
-                "role": "user",
-                "content": content,
-            },
-        },
+        "messages": redisServer.SessionList, // 使用 RedisServer 结构体的会话列表
     }
+    fmt.Println(data)
 
     jsonData, err := json.Marshal(data)
     if err!= nil {
@@ -58,6 +50,7 @@ func sendRequestAndGetResponse(apiKey, content string) (string, error) {
 }
 
 func extractMessageContent(response string) (string, error) {
+    fmt.Println(response)
     var data map[string]interface{}
     json.Unmarshal([]byte(response), &data)
 
@@ -69,22 +62,4 @@ func extractMessageContent(response string) (string, error) {
     }
 
     return "",nil
-}
-
-func demo() {
-    apiKey := ""
-    content := "ping"
-
-    response, err := sendRequestAndGetResponse(apiKey, content)
-    if err!= nil {
-        fmt.Println("请求出错:", err)
-        return
-    }
-    extract_content, err := extractMessageContent(response) 
-    if err != nil {
-        fmt.Println("json解析出错", err)
-        return 
-    }
-
-    fmt.Println(extract_content)
 }
